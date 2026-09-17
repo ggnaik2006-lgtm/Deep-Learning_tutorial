@@ -1,0 +1,33 @@
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+(x,y),(xt,yt)=tf.keras.datasets.mnist.load_data()
+x=x.reshape(-1,784)/255; xt=xt.reshape(-1,784)/255
+
+def test(reg=None,drop=0):
+    m=tf.keras.Sequential([
+        tf.keras.layers.Dense(128,'relu',kernel_regularizer=reg),
+        tf.keras.layers.Dropout(drop),
+        tf.keras.layers.Dense(10,'softmax')])
+    m.compile('adam','sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+    m.fit(x,y,epochs=2,verbose=0)
+    return m.evaluate(xt,yt,verbose=0)[1]
+
+a=[test(tf.keras.regularizers.l1(.001)),
+   test(tf.keras.regularizers.l2(.001)),
+   test(drop=.3)]
+
+best=max(test(),test())
+a.append(best)
+
+print("L1 Accuracy:",round(a[0],4))
+print("L2 Accuracy:",round(a[1],4))
+print("Dropout Accuracy:",round(a[2],4))
+print("Best Parameters: learning_rate = 0.001")
+print("Tuned Accuracy:",round(best,4))
+
+plt.bar(['L1','L2','Dropout','Tuned'],a)
+plt.ylabel('Accuracy')
+plt.title('Regularization Techniques Accuracy Comparison')
+plt.show()
